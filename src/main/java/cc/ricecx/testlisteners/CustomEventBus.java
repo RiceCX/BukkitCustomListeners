@@ -8,14 +8,16 @@ import org.bukkit.event.Listener;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CustomEventBus {
 
-    public Map<Class<? extends Event>, Map.Entry<Object, Method>> events = new HashMap<>();
+    public Map<Class<? extends Event>, List<Map.Entry<Object, Method>>> events = new HashMap<>();
 
     @SneakyThrows
     @SuppressWarnings("unchecked")
@@ -35,17 +37,19 @@ public class CustomEventBus {
                     else continue;
 
                     var clazz = Class.forName(type);
-                    events.put((Class<? extends Event>) clazz, Map.entry(listener, method));
+                    events.computeIfAbsent((Class<? extends Event>) clazz, k -> new ArrayList<>()).add(Map.entry(listener, method));
                 }
             }
         }
     }
 
     public void callEvent(AbstractWorldEvent<?> event) {
-        Map.Entry<Object, Method> method = events.get(event.getBukkitEvent().getClass());
-        if (method != null) {
+        List<Map.Entry<Object, Method>> methods = events.get(event.getBukkitEvent().getClass());
+        if (methods != null) {
             try {
-                method.getValue().invoke(method.getKey(), event);
+                for (Map.Entry<Object, Method> method : methods) {
+                    method.getValue().invoke(method.getKey(), event);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
