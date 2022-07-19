@@ -1,0 +1,4 @@
+name: localplugin
+main: cc.ricecx.testlisteners.LocalPlugin
+version: 1349
+api-version: 1.13
